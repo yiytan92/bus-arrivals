@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+    <title>Bus Arrivals</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f4f4f4;
+            color: #222;
+            width: 800px;
+            height: 480px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .bus-stop {
+            margin-bottom: 20px;
+            background: #ffffff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .bus-stop h2 {
+            font-size: 20px;
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .arrivals {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .error {
+            color: #c00;
+        }
+    </style>
+</head>
+<body>
+    <div id="bus-stop-1" class="bus-stop"><h2>Opp Blk 575</h2><div class="arrivals">Loading...</div></div>
+    <div id="bus-stop-2" class="bus-stop"><h2>Blk 573A</h2><div class="arrivals">Loading...</div></div>
+    <div id="bus-stop-3" class="bus-stop"><h2>Opp Blk 620</h2><div class="arrivals">Loading...</div></div>
+
+    <script>
+        const busStops = [
+            { code: '47521', label: 'Opp Blk 575', elementId: 'bus-stop-1' },
+            { code: '47529', label: 'Blk 573A', elementId: 'bus-stop-2' },
+            { code: '47569', label: 'Opp Blk 620', elementId: 'bus-stop-3' }
+        ];
+
+        async function fetchBusData(stop) {
+            const container = document.querySelector(`#${stop.elementId} .arrivals`);
+            try {
+                const res = await fetch(`/bus?bus_stop_code=${stop.code}`);
+                const data = await res.json();
+                if (data.Services) {
+                    const arrivals = data.Services.map(s => {
+                        const time = new Date(s.NextBus.EstimatedArrival);
+                        const min = Math.round((time - new Date()) / 60000);
+                        return `${s.ServiceNo}: ${isNaN(min) ? 'No ETA' : min + ' min'}`;
+                    });
+                    container.innerHTML = arrivals.join('<br>');
+                } else {
+                    container.innerHTML = '<span class="error">No data available</span>';
+                }
+            } catch (e) {
+                container.innerHTML = '<span class="error">Connection error</span>';
+            }
+        }
+
+        function updateAllStops() {
+            busStops.forEach(fetchBusData);
+        }
+
+        updateAllStops();
+        setInterval(updateAllStops, 15000);  // Refresh every 15s
+    </script>
+</body>
+</html>
