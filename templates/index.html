@@ -6,53 +6,137 @@
     <title>Bus Arrivals</title>
     <style>
       body {
-          margin: 0;
-          padding: 20px;
-          font-family: "Segoe UI", sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           background-color: #121212;
           color: #f5f5f5;
+          margin: 0;
+          padding: 10px;
           width: 800px;
           height: 480px;
           box-sizing: border-box;
-      }
-
-      h1 {
-          font-size: 36px;
-          margin-bottom: 10px;
-          text-align: center;
-          color: #ffffff;
+          display: grid;
+          grid-template-columns: 2fr 1fr;  /* 2:1 ratio for first row */
+          grid-template-rows: auto auto;
+          gap: 10px;
       }
 
       .bus-stop {
-          margin-bottom: 10px;
-          background: #1e1e1e;
-          padding: 12px 15px;
-          border-radius: 10px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+          background: linear-gradient(145deg, #1e1e1e, #252525);
+          padding: 5px 20px;
+          border-radius: 15px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+          transition: transform 0.2s;
+          width: 100%;  /* Ensure it takes full width of grid cell */
+      }
+
+      .bus-stop:hover {
+          transform: translateY(-2px);
       }
 
       .bus-stop h2 {
-          font-size: 36px;
-          margin: 0 0 8px 0;
-          border-bottom: 1px solid #333;
-          padding-bottom: 4px;
-          color: #f5f5f5;
+          font-size: 32px;
+          margin: 0 0 12px 0;
+          border-bottom: 2px solid #333;
+          padding-bottom: 8px;
+          color: #90caf9;
       }
 
       .arrivals {
-          font-size: 36px;
-          color: #cfd8dc;
+          font-size: 28px;
+          color: #e0e0e0;
+          line-height: 1.4;
+      }
+
+      #weather-widget {
+          position: relative;  /* Change from absolute to relative */
+          top: 0;
+          right: 0;
+          background: linear-gradient(145deg, #23272e, #2c3138);
+          border-radius: 15px;
+          /* padding: 10px; */
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+          text-align: center;
+          width: 80%;
+          backdrop-filter: blur(10px);
+          margin-left: auto;  /* Push to right side of container */
+          height: 100%;  /* Take full height of grid cell */
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+      }
+
+      #weather-icon {
+          font-size: 52px;
+          margin-bottom: 10px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+
+      #weather-address {
+          font-size: 16px;
+          color: #90caf9;
+          margin-bottom: 6px;
+          font-weight: 500;
+      }
+
+      #weather-info {
+          font-size: 20px !important;
+          color: #e0e0e0;
+          font-weight: 300;
+      }
+
+      #clock {
+          color: #ffffff;
+          font-size: 20px;
+          border-left: 1px solid #404040;
+          padding-left: 10px;
       }
 
       .error {
-          color: #ff6b6b;
+          color: #ff5252;
+          font-weight: 500;
+      }
+
+      /* Animation for loading states */
+      @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
+      }
+
+      .loading {
+          animation: pulse 1.5s infinite;
+      }
+
+      /* Add grid positioning classes */
+      .grid-span-2 {
+          grid-column: span 2;
+      }
+
+      /* Update weather-info container to be a flex container */
+      .weather-info-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          margin-top: 6px;
+          padding: 10px;
       }
   </style>
 </head>
 <body>
     <div id="bus-stop-1" class="bus-stop"><h2>Opp Blk 575</h2><div class="arrivals">Loading...</div></div>
-    <div id="bus-stop-2" class="bus-stop"><h2>Blk 573A</h2><div class="arrivals">Loading...</div></div>
-    <div id="bus-stop-3" class="bus-stop"><h2>Opp Blk 620</h2><div class="arrivals">Loading...</div></div>
+
+    <div id="weather-widget">
+        <div id="weather-icon">⏳</div>
+        <div id="weather-address">Loading...</div>
+        <div class="weather-info-container">
+            <div id="weather-info">Loading...</div>
+            <div id="clock"></div>
+        </div>
+    </div>
+
+    <div id="bus-stop-2" class="bus-stop grid-span-2"><h2>Blk 573A</h2><div class="arrivals">Loading...</div></div>
+    <div id="bus-stop-3" class="bus-stop grid-span-2"><h2>Opp Blk 620</h2><div class="arrivals">Loading...</div></div>
 
     <script>
         const busStops = [
@@ -70,30 +154,84 @@
 
         async function fetchBusData(stop) {
             const container = document.querySelector(`#${stop.elementId} .arrivals`);
+            container.classList.add('loading');
             try {
                 const res = await fetch(`/bus?bus_stop_code=${stop.code}`);
                 const data = await res.json();
                 if (data.Services) {
                     const arrivals = data.Services.map(s => {
-                        const next1 = getMinutes(s.NextBus?.EstimatedArrival);
-                        const next2 = getMinutes(s.NextBus2?.EstimatedArrival);
-                        return `${s.ServiceNo}: ${next1}, ${next2}`;
+                        const next1 = getMinutes(s.NextBus.EstimatedArrival);
+                        const next2 = getMinutes(s.NextBus2.EstimatedArrival);
+                        return `<div style="margin-bottom: 8px;">
+                            <strong style="color: #90caf9">Bus ${s.ServiceNo}</strong>
+                            <span style="color: #69f0ae">${next1}</span> |
+                            <span style="color: #b39ddb">${next2}</span>
+                        </div>`;
                     });
-                    container.innerHTML = arrivals.join('<br>');
+                    container.innerHTML = arrivals.join('');
                 } else {
                     container.innerHTML = '<span class="error">No data available</span>';
                 }
             } catch (e) {
                 container.innerHTML = '<span class="error">Connection error</span>';
             }
+            container.classList.remove('loading');
         }
+
+        async function updateWeather() {
+          const icon = document.getElementById('weather-icon');
+          const address = document.getElementById('weather-address');
+          const info = document.getElementById('weather-info');
+          try {
+              const res = await fetch('/rainfall');
+              const data = await res.json();
+              if (data.error) {
+                  icon.textContent = '❓';
+                  address.textContent = 'Unknown';
+                  info.textContent = data.error;
+                  return;
+              }
+              address.textContent = data.station?.name || 'Unknown';
+              // Simple icon logic: rain if rainfall > 0, else sun
+              if (typeof data.rainfall === 'number') {
+                  if (data.rainfall > 0) {
+                      icon.textContent = '☔️';
+                      info.textContent = `${data.rainfall} mm rain`;
+                  } else {
+                      icon.textContent = '☀️';
+                      info.textContent = 'No rain';
+                  }
+              } else {
+                  icon.textContent = '❓';
+                  info.textContent = 'No data';
+              }
+          } catch (e) {
+              icon.textContent = '⚠️';
+              address.textContent = 'Error';
+              info.textContent = 'Connection error';
+          }
+      }
 
         function updateAllStops() {
             busStops.forEach(fetchBusData);
         }
 
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString('en-SG', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true, // Enable 12-hour format with AM/PM
+            });
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
         updateAllStops();
         setInterval(updateAllStops, 15000);  // Refresh every 15s
+        updateWeather();
+        setInterval(updateWeather, 5 * 60 * 1000); // Every 5 minutes
     </script>
 </body>
 </html>
