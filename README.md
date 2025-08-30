@@ -4,7 +4,7 @@ A Flask application that displays bus arrival times and controls Somfy TaHoma bl
 
 ## Features
 - Real-time bus arrival display
-- Weather monitoring (rainfall at Woodlands Drive 62)
+- Weather monitoring (rainfall)
 - Automated blind control based on rainfall
 - Scheduled blind closure at 9 PM daily
 - Secure TaHoma API integration
