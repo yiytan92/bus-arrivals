@@ -2,9 +2,10 @@ version: "3"
 services:
   bus-display:
     build: .
-    network_mode: "host" # Use host networking
+    ports:
+      - "3888:3888"
     env_file:
-      - .env
+      - .env # This loads .env as actual environment variables
     restart: unless-stopped
     environment:
       - TZ=Asia/Singapore
