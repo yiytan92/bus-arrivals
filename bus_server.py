@@ -42,7 +42,7 @@ def get_tahoma_api_version():
     logger.info("Test TaHoma connection by getting API version")
     try:
         url = f"https://{TAHOMA_URL}:{TAHOMA_PORT}/enduser-mobile-web/1/enduserAPI/apiVersion"
-        response = requests.get(url, headers=TAHOMA_HEADERS, verify=VERIFY)
+        response = requests.get(url, headers=TAHOMA_HEADERS, verify=False)
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
@@ -54,18 +54,17 @@ def close_blinds():
     try:
         url = f"https://{TAHOMA_URL}:{TAHOMA_PORT}/enduser-mobile-web/1/enduserAPI/exec/apply"
 
-        # Use the "Blind all" device to control all blinds at once
         payload = {
             "label": "Close blinds - Rain detected",
             "actions": [
                 {
-                    "deviceURL": BLINDS_URL,  # Blind all
+                    "deviceURL": BLINDS_URL,
                     "commands": [{"name": "close", "parameters": []}]
                 }
             ]
         }
 
-        response = requests.post(url, json=payload, headers=TAHOMA_HEADERS, verify=VERIFY)
+        response = requests.post(url, json=payload, headers=TAHOMA_HEADERS, verify=False)
         response.raise_for_status()
         logger.info("Closing all blinds due to rain")
         return response.json()
