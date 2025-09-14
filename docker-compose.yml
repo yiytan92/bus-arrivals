@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 services:
   bus-display:
     build: .
     ports:
       - "3888:3888"
-    volumes:
-      - .env:/app/.env
+    env_file:
+      - .env # This loads .env as actual environment variables
     restart: unless-stopped
     environment:
       - TZ=Asia/Singapore

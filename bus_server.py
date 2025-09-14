@@ -17,7 +17,7 @@ TAHOMA_PORT = os.getenv('TAHOMA_PORT')     # Replace with your TaHoma box port
 TAHOMA_TOKEN = os.getenv('TAHOMA_TOKEN')
 BLINDS_URL = os.getenv('BLINDS_URL')
 
-RAINFALL_THRESHOLD = 0.2      # mm of rain that triggers blind closure
+RAINFALL_THRESHOLD = 0.1      # mm of rain that triggers blind closure
 TAHOMA_HEADERS = {
     'accept': 'application/json',
     'Authorization': f'Bearer {TAHOMA_TOKEN}'
@@ -131,6 +131,7 @@ def get_latest_rainfall():
 def tahoma_version():
     version = get_tahoma_api_version()
     if version:
+        close_blinds()
         return jsonify(version)
     return jsonify({"error": "Failed to connect to TaHoma"}), 500
 
